@@ -17,3 +17,7 @@
 
 Siwapp.geany
 Siwapp.tags
+
+.project
+.settings/
+.DS_Store
