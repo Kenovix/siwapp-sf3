@@ -1,33 +1,38 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: jvasquez
+ * Date: 13/1/2017
+ * Time: 5:06 PM
+ */
 
-namespace Siwapp\EstimateBundle\Entity;
+namespace Siwapp\OrderBundle\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Inflector\Inflector;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Util\Inflector;
 use Siwapp\CoreBundle\Entity\AbstractInvoice;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Siwapp\EstimateBundle\Entity\Estimate
+ * Siwapp\OrderBundle\Entity\Order
  *
- * @ORM\Table(indexes={
- *    @ORM\Index(name="estimate_cstnm_idx", columns={"customer_name"}),
- *    @ORM\Index(name="estimate_cstid_idx", columns={"customer_identification"}),
- *    @ORM\Index(name="estimate_cstml_idx", columns={"customer_email"}),
- *    @ORM\Index(name="estimate_cntct_idx", columns={"contact_person"})
+ * @ORM\Table(name="`order`", indexes={
+ *    @ORM\Index(name="order_cstnm_idx", columns={"customer_name"}),
+ *    @ORM\Index(name="order_cstid_idx", columns={"customer_identification"}),
+ *    @ORM\Index(name="order_cstml_idx", columns={"customer_email"}),
+ *    @ORM\Index(name="order_cntct_idx", columns={"contact_person"})
  * })
- * @ORM\Entity(repositoryClass="Siwapp\EstimateBundle\Repository\EstimateRepository")
+ * @ORM\Entity(repositoryClass="Siwapp\OrderBundle\Repository\OrderRepository")
  * @ORM\HasLifecycleCallbacks()
  */
-class Estimate extends AbstractInvoice
+class Order extends AbstractInvoice
 {
     /**
-     * @ORM\ManyToMany(targetEntity="Siwapp\CoreBundle\Entity\Item", cascade={"all"}, inversedBy="estimate")
-     * @ORM\JoinTable(name="estimates_items",
-     *      joinColumns={@ORM\JoinColumn(name="estimate_id", referencedColumnName="id", onDelete="CASCADE")},
+     * @ORM\ManyToMany(targetEntity="Siwapp\CoreBundle\Entity\Item", cascade={"all"}, inversedBy="order")
+     * @ORM\JoinTable(name="orders_items",
+     *      joinColumns={@ORM\JoinColumn(name="order_id", referencedColumnName="id", onDelete="CASCADE")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="item_id", referencedColumnName="id", unique=true, onDelete="CASCADE")}
      * )
      * @Assert\NotBlank()
@@ -40,6 +45,13 @@ class Estimate extends AbstractInvoice
      * @ORM\Column(name="number", type="integer", nullable=true)
      */
     private $number;
+
+    /**
+     * @var boolean $imported
+     *
+     * @ORM\Column(type="boolean")
+     */
+    private $imported = false;
 
     /**
      * @var boolean $sent_by_email
@@ -55,6 +67,13 @@ class Estimate extends AbstractInvoice
      * @Assert\Date()
      */
     private $issue_date;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="estimate_to", type="bigint", nullable=true)
+     */
+    private $estimate_to;
 
     public function __construct()
     {
@@ -146,7 +165,7 @@ class Estimate extends AbstractInvoice
     public function setIssueDate($issueDate)
     {
         $this->issue_date = $issueDate instanceof \DateTime ?
-        $issueDate: new \DateTime($issueDate);
+            $issueDate: new \DateTime($issueDate);
     }
 
     /**
@@ -157,6 +176,38 @@ class Estimate extends AbstractInvoice
     public function getIssueDate()
     {
         return $this->issue_date;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isImported(): bool
+    {
+        return $this->imported;
+    }
+
+    /**
+     * @param bool $imported
+     */
+    public function setImported(bool $imported)
+    {
+        $this->imported = $imported;
+    }
+
+    /**
+     * @return int
+     */
+    public function getEstimateTo(): int
+    {
+        return $this->estimate_to;
+    }
+
+    /**
+     * @param int $estimate_to
+     */
+    public function setEstimateTo(int $estimate_to)
+    {
+        $this->estimate_to = $estimate_to;
     }
 
     /** ********** CUSTOM METHODS AND PROPERTIES ************* */
@@ -190,6 +241,10 @@ class Estimate extends AbstractInvoice
 
     public function label()
     {
+        /*$series = $this->getSeries();
+        $label = '';
+        $label .= $series ? $series->getValue() : '';
+        $label .= $this->isDraft() ? '[draft]' : $this->getNumber();*/
         $series = $this->getSeries();
         $label = '';
         $label .= $series ? $series->getValue() : '';
@@ -209,13 +264,13 @@ class Estimate extends AbstractInvoice
         switch ($this->status) {
             case self::DRAFT;
                 $status = 'draft';
-             break;
+                break;
             case self::REJECTED;
                 $status = 'rejected';
-            break;
+                break;
             case self::APPROVED;
                 $status = 'approved';
-            break;
+                break;
             case self::PENDING:
                 $status = 'pending';
                 break;
@@ -229,20 +284,16 @@ class Estimate extends AbstractInvoice
     public function checkStatus()
     {
         if ($this->isDraft()) {
-            $this->setStatus(Estimate::DRAFT);
+            $this->setStatus(Order::DRAFT);
         }
     }
 
     public function checkNumber($args)
     {
         // compute the number of invoice
-        /*if ((!$this->number && $this->status!=self::DRAFT) ||
-            ($args instanceof PreUpdateEventArgs && $args->hasChangedField('series') && $this->status!=self::DRAFT)
-        )*/
-        if ((!$this->number /*&& $this->status!=self::DRAFT*/) ||
-            ($args instanceof PreUpdateEventArgs && $args->hasChangedField('series') && $this->status!=self::DRAFT)
-        ) {
-            $repo = $args->getEntityManager()->getRepository('SiwappEstimateBundle:Estimate');
+        //if ( $this->status != self::DRAFT && ( !$this->number || ( $args instanceof PreUpdateEventArgs && $args->hasChangedField('series') ) ) ) {
+        if ( /*$this->status != self::DRAFT &&*/ !$this->number || ( $args instanceof PreUpdateEventArgs && $args->hasChangedField('series') && $this->status!=self::DRAFT) ) {
+            $repo = $args->getEntityManager()->getRepository('SiwappOrderBundle:Order');
             $series = $this->getSeries();
             if ($repo && $series) {
                 $this->setNumber($repo->getNextNumber($series));

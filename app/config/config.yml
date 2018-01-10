@@ -55,6 +55,7 @@ assetic:
         - SiwappEstimateBundle
         - SiwappRecurringInvoiceBundle
         - SiwappUserBundle
+        - SiwappOrderBundle
 
 # Doctrine Configuration
 doctrine:

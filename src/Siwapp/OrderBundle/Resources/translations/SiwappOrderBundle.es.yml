@@ -1,28 +1,27 @@
-estimate:
+order:
     draft: 'Borrador'
     pending: 'Pendiente'
     approved: 'Aprobado'
     rejected: 'Rechazado'
     not_sent_by_email: 'No enviado por correo electrónico'
     sent_by_email: 'Enviado por correo electrónico'
-    estimate: 'Orden'
-    delivery_note: 'Albarán'
+    order: 'Presupuesto'
 
 menu:
-    estimate_index: 'Órdenes'
-    estimate_add: 'Nueva Orden'
-    delivery_note: 'Albarán'
+    order_index: 'Presupuestos'
+    order_add: 'Nuevo presupuesto'
 
 flash:
     nothing_selected: 'Por favor, seleccione algo.'
-    added: 'Orden creada.'
-    updated: 'Orden actualizada.'
-    deleted: 'Orden borrada.'
-    emailed: 'Orden enviada por correo electrónico.'
-    bulk_emailed: 'Orden(es) enviada(s) por correo electrónico.'
-    bulk_deleted: 'Orden(es) borrada(s).'
-    invoice_generated: 'Factura generada.'
-    no_js_estimate_print: 'Haga click aquí para imprimir su orden si no se hace automáticamente.'
+    added: 'Presupuesto creado.'
+    updated: 'Presupuesto actualizado.'
+    deleted: 'Presupuesto borrado.'
+    emailed: 'Presupuesto enviado por correo electrónico.'
+    bulk_emailed: 'Presupuesto(s) enviado(s) por correo electrónico.'
+    bulk_deleted: 'Presupuesto(s) borrado(s).'
+    estimate_generated: 'Orden generada.'
+    no_js_order_print: 'Haga click aquí para imprimir su presupuesto si no se ha hecho de manera automática.'
+    unregistered_customer: 'El cliente indicado no existe. Es necesario darle de alta antes de continuar.'
 
 search:
     terms: 'Términos'
@@ -46,13 +45,13 @@ list:
     issue_date: 'Fecha'
     status: 'Estado'
     gross_amount: 'Total'
-    no_results: 'No se han encontrado órdenes.'
+    no_results: 'No se han encontrado presupuestos.'
 
 show:
     print: 'Imprimir'
     pdf: 'PDF'
     email: 'Enviar por correo electrónico'
-    generate_invoice: 'Generar factura'
+    generate_estimate: 'Generar orden'
     issue_date: 'Fecha de creación'
     status: 'Estado'
     series: 'Serie'
@@ -69,6 +68,6 @@ form:
     submit_pdf: 'Guardar y descargar como PDF'
     submit_print: 'Guardar e imprimir'
     submit_email: 'Guarda y enviar por email'
-    submit_generate: 'Guardar y generar factura'
+    submit_generate: 'Guardar y generar orden'
     submit_delete: 'Borrar'
     tags: 'Etiquetas'

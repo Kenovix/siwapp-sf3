@@ -1,0 +1,48 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: jvasquez
+ * Date: 16/1/2017
+ * Time: 6:33 AM
+ */
+
+namespace Siwapp\OrderBundle\Entity;
+
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Entity()
+ */
+class ExcelFile {
+    /**
+     * @var File
+     *
+     * @Assert\File(
+     *     maxSize = "6M",
+     *     mimeTypes = {"application/vnd.ms-excel"},
+     *     maxSizeMessage = "Symfony: File too big!",
+     *     mimeTypesMessage = "Symfony: Invalid file type!"
+     * )
+     */
+    private $file;
+
+    /**
+     * @return File
+     */
+    public function getFile(): File
+    {
+        return $this->file;
+    }
+
+    /**
+     * @param File $file
+     */
+    public function setFile(File $file)
+    {
+        $this->file = $file;
+
+        return $this;
+    }
+}

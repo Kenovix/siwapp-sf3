@@ -40,6 +40,11 @@ siwapp_dashboard:
     resource: "@SiwappDashboardBundle/Controller/"
     type:     annotation
     prefix:   /
+    
+siwapp_order:
+    resource: "@SiwappOrderBundle/Controller/"
+    type:     annotation
+    prefix:   /
 
 # Internal routing configuration to handle ESI
 #_internal:

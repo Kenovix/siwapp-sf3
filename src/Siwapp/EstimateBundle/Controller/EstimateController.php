@@ -15,7 +15,7 @@ use Siwapp\EstimateBundle\Entity\Estimate;
 use Siwapp\EstimateBundle\Form\EstimateType;
 
 /**
- * @Route("/estimate")
+ * @Route("/order")
  */
 class EstimateController extends AbstractInvoiceController
 {
@@ -40,7 +40,7 @@ class EstimateController extends AbstractInvoiceController
             $pagination = $repo->paginatedSearch($form->getData(), $limit, $request->query->getInt('page', 1));
         } else {
             $pagination = $repo->paginatedSearch([], $limit, $request->query->getInt('page', 1));
-        }
+        }        
 
         $listForm = $this->createForm('Siwapp\EstimateBundle\Form\EstimateListType', $pagination->getItems(), [
             'action' => $this->generateUrl('estimate_index'),
@@ -60,6 +60,12 @@ class EstimateController extends AbstractInvoiceController
                     return $this->bulkPrint($data['estimates']);
                 } elseif ($request->request->has('email')) {
                     return $this->bulkEmail($data['estimates']);
+                } elseif ($request->request->has('pdf-deliverynote-estimate')) {
+                    return $this->bulkDeliveryNotePdf($data['estimates']);
+                } elseif ($request->request->has('print-deliverynote-estimate')) {
+                    return $this->bulkDeliveryNotePrint($data['estimates']);
+                } elseif ($request->request->has('email-deliverynote-estimate')) {
+                    return $this->bulkDeliveryNoteEmail($data['estimates']);
                 }
             }
         }
@@ -128,9 +134,45 @@ class EstimateController extends AbstractInvoiceController
             200,
             array(
                 'Content-Type'          => 'application/pdf',
-                'Content-Disposition'   => 'attachment; filename="Estimate-' . $estimate->label() . '.pdf"'
+                'Content-Disposition'   => 'attachment; filename="Order-' . $estimate->label() . '.pdf"'
             )
         );
+    }
+
+    /**
+     * @Route("/{id}/show/deliverynote/print", name="estimate_deliverynote_show_print")
+     */
+    public function showPrintDeliveryNoteAction($id)
+    {
+        $estimate = $this->getDoctrine()
+            ->getRepository('SiwappEstimateBundle:Estimate')
+            ->find($id);
+        if (!$estimate) {
+            throw $this->createNotFoundException('Unable to find Estimate entity.');
+        }
+
+        return new Response($this->getDeliveryNotePrintPdfHtml($estimate, true));
+    }
+
+    /**
+     * @Route("/{id}/show/deliverynote/pdf", name="estimate_deliverynote_show_pdf")
+     */
+    public function showDeliveryNotePdfAction($id)
+    {
+        $estimate = $this->getDoctrine()
+            ->getRepository('SiwappEstimateBundle:Estimate')
+            ->find($id);
+        if (!$estimate) {
+            throw $this->createNotFoundException('Unable to find Estimate entity.');
+        }
+
+        $html = $this->getDeliveryNotePrintPdfHtml($estimate);
+        $pdf = $this->getPdf($html);
+
+        return new Response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="Invoice-' . $estimate->label() . '.pdf"'
+        ]);
     }
 
     /**
@@ -141,8 +183,7 @@ class EstimateController extends AbstractInvoiceController
     {
         $em = $this->getDoctrine()->getManager();
         $estimate = new Estimate();
-        $newItem = new Item($em->getRepository('SiwappCoreBundle:Tax')->findBy(['is_default' => 1]));
-        $estimate->addItem($newItem);
+        $estimate->addItem(new Item());
         $terms = $em->getRepository('SiwappConfigBundle:Property')->get('legal_terms');
         if ($terms) {
             $estimate->setTerms($terms);
@@ -150,15 +191,11 @@ class EstimateController extends AbstractInvoiceController
 
         $form = $this->createForm(EstimateType::class, $estimate, [
             'action' => $this->generateUrl('estimate_add'),
+            'quantity_item_zero' => true,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($request->request->has('save_draft')) {
-                $estimate->setStatus(Estimate::DRAFT);
-            } elseif ($request->request->has('save')) {
-                $estimate->setStatus(Estimate::PENDING);
-            }
             $em->persist($estimate);
             $em->flush();
             $this->addTranslatedMessage('flash.added');
@@ -186,6 +223,7 @@ class EstimateController extends AbstractInvoiceController
         }
         $form = $this->createForm(EstimateType::class, $entity, [
             'action' => $this->generateUrl('estimate_edit', ['id' => $id]),
+            'editing' => true,
         ]);
         $form->handleRequest($request);
 
@@ -193,11 +231,11 @@ class EstimateController extends AbstractInvoiceController
             $redirectRoute = 'estimate_edit';
             if ($request->request->has('save_draft')) {
                 $entity->setStatus(Estimate::DRAFT);
-            } elseif ($request->request->has('save_close')) {
+            }/* elseif ($request->request->has('save_close')) {
                 $entity->setStatus(Estimate::REJECTED);
             } elseif ($entity->isDraft()) {
-                $entity->setStatus(Estimate::APPROVED);
-            }
+                $entity->setStatus(Estimate::PENDING);
+            }*/
             // See if one of PDF/Print buttons was clicked.
             if ($request->request->has('save_pdf')) {
                 $redirectRoute = 'estimate_show_pdf';
@@ -207,6 +245,10 @@ class EstimateController extends AbstractInvoiceController
             $em->persist($entity);
             $em->flush();
             $this->addTranslatedMessage('flash.updated');
+
+            if ($request->request->has('save_close')) {
+                return $this->redirect($this->generateUrl('estimate_index'));
+            }
 
             // Send the email after the estimate is updated.
             if ($request->request->has('save_email')) {
@@ -331,10 +373,29 @@ class EstimateController extends AbstractInvoiceController
             ->getRepository('SiwappConfigBundle:Property')
             ->getAll();
 
+        $factor = !$print ? self::ITEMS_FACTOR : 0;
+
         return $this->renderView('SiwappEstimateBundle:Estimate:print.html.twig', [
             'estimate'  => $estimate,
             'settings' => $settings,
             'print' => $print,
+            'itemsxPage' => self::MAX_ITEMS_X_PAGE * ( 1 + $factor ),
+        ]);
+    }
+
+    protected function getDeliveryNotePrintPdfHtml(Estimate $estimate, $print = false)
+    {
+        $settings = $this->getDoctrine()
+            ->getRepository('SiwappConfigBundle:Property')
+            ->getAll();
+
+        $factor = !$print ? self::ITEMS_FACTOR : 0;
+
+        return $this->renderView('SiwappEstimateBundle:Estimate:print.deliverynote.html.twig', [
+            'estimate'  => $estimate,
+            'settings' => $settings,
+            'print' => $print,
+            'itemsxPage' => self::MAX_ITEMS_X_PAGE * ( 1 + $factor )
         ]);
     }
 
@@ -362,7 +423,7 @@ class EstimateController extends AbstractInvoiceController
 
         return new Response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="Estimates.pdf"'
+            'Content-Disposition' => 'attachment; filename="Orders.pdf"'
         ]);
     }
 
@@ -395,6 +456,74 @@ class EstimateController extends AbstractInvoiceController
         return $this->redirect($this->generateUrl('estimate_index'));
     }
 
+    protected function bulkDeliveryNotePdf(array $estimates)
+    {
+        $pages = [];
+        foreach ($estimates as $estimate) {
+            $pages[] = $this->getDeliveryNotePrintPdfHtml($estimate);
+        }
+
+        $html = $this->get('siwapp_core.html_page_merger')->merge($pages, '<div class="pagebreak"> </div>');
+        $pdf = $this->getPdf($html);
+
+        return new Response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="DeliveryNotes.pdf"'
+        ]);
+    }
+
+    protected function bulkDeliveryNotePrint(array $estimates)
+    {
+        $pages = [];
+        foreach ($estimates as $estimate) {
+            $pages[] = $this->getDeliveryNotePrintPdfHtml($estimate, true);
+        }
+
+        $html = $this->get('siwapp_core.html_page_merger')->merge($pages, '<div class="pagebreak"> </div>');
+
+        return new Response($html);
+    }
+
+    protected function bulkDeliveryNoteEmail(array $estimates)
+    {
+        $em = $this->getDoctrine()->getManager();
+        foreach ($estimates as $estimate) {
+            $message = $this->getDeliveryNoteEmailMessage($estimate);
+            $result = $this->get('mailer')->send($message);
+            if ($result) {
+                $estimate->setSentByEmail(true);
+                $em->persist($estimate);
+            }
+        }
+        $em->flush();
+        $this->addTranslatedMessage('flash.bulk_emailed');
+
+        return $this->redirect($this->generateUrl('estimate_index'));
+    }
+
+    protected function getDeliveryNoteEmailMessage($estimate)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $configRepo = $em->getRepository('SiwappConfigBundle:Property');
+
+        $html = $this->renderView('SiwappEstimateBundle:Estimate:email.deliverynote.html.twig', array(
+            'estimate'  => $estimate,
+            'settings' => $em->getRepository('SiwappConfigBundle:Property')->getAll(),
+            'itemsxPage' => self::MAX_ITEMS_X_PAGE * ( 999 )
+        ));
+        $pdf = $this->getPdf($html);
+        $attachment = new \Swift_Attachment($pdf, $estimate->getId().'.pdf', 'application/pdf');
+        $subject = '[' . $this->get('translator')->trans('estimate.estimate', [], 'SiwappEstimateBundle') . ': ' . $estimate->label() . ']';
+        $message = \Swift_Message::newInstance()
+            ->setSubject($subject)
+            ->setFrom($configRepo->get('company_email'), $configRepo->get('company_name'))
+            ->setTo($estimate->getCustomerEmail(), $estimate->getCustomerName())
+            ->setBody($html, 'text/html')
+            ->attach($attachment);
+
+        return $message;
+    }
+
     protected function getEmailMessage($estimate)
     {
         $em = $this->getDoctrine()->getManager();
@@ -403,6 +532,7 @@ class EstimateController extends AbstractInvoiceController
         $html = $this->renderView('SiwappEstimateBundle:Estimate:email.html.twig', array(
             'estimate'  => $estimate,
             'settings' => $em->getRepository('SiwappConfigBundle:Property')->getAll(),
+            'itemsxPage' => self::MAX_ITEMS_X_PAGE * ( 999 )
         ));
         $pdf = $this->getPdf($html);
         $attachment = new \Swift_Attachment($pdf, $estimate->getId().'.pdf', 'application/pdf');

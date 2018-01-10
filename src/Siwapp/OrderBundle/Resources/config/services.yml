@@ -1,0 +1,15 @@
+services:
+    siwapp_order.estimate_generator:
+        class: Siwapp\OrderBundle\EstimateGenerator
+        arguments:
+            - '@doctrine.orm.entity_manager'
+    siwapp_order.listener.item_listener:
+        class: Siwapp\OrderBundle\EventListener\ItemListener
+        tags:
+            - { name: doctrine.event_listener, event: onFlush }
+            
+    siwapp_order.form.type.order:
+        class: Siwapp\OrderBundle\Form\OrderType
+        arguments: ['@doctrine.orm.entity_manager']
+        tags:
+            - { name: form.type }

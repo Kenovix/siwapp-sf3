@@ -1,38 +1,38 @@
 {% extends "SiwappCoreBundle:AbstractInvoice:edit.html.twig" %}
-{% trans_default_domain 'SiwappEstimateBundle' %}
+{% trans_default_domain 'SiwappOrderBundle' %}
 
 
 {% block page_messages %}
   {{ parent() }}
 
-  {% if app.request.session.get('estimate_auto_print') %}
+  {% if app.request.session.get('order_auto_print') %}
   <div class="alert alert-warning fade in js-hide">
     <a href="#" class="close" data-dismiss="alert">&times;</a>
-    <a href="{{ path('estimate_show_print', {'id': app.request.session.remove('estimate_auto_print')}) }}" class="js-auto-click">{% trans %}flash.no_js_estimate_print{% endtrans %}</a>
+    <a href="{{ path('estimate_show_print', {'id': app.request.session.remove('order_auto_print')}) }}" class="js-auto-click">{% trans %}flash.no_js_order_print{% endtrans %}</a>
   </div>
   {% endif %}
 {% endblock %}
 
 
 {% block actionlink %}
-<a href="{{ path('estimate_add') }}" class="btn btn-default btn-primary">
+<a href="{{ path('order_add') }}" class="btn btn-default btn-primary">
   <span class="glyphicon glyphicon-plus"></span>
-  {% trans %}menu.estimate_add{% endtrans %}
+  {% trans %}menu.order_add{% endtrans %}
 </a>
 {% endblock %}
 
 
 {% block invoice_label %}
-  <h2>{% trans %}estimate.estimate{% endtrans %} {{ entity.label() }}</h2>
+  <h2>{% trans %}order.order{% endtrans %} {{ entity.label() }}</h2>
   <ul id="invoice-like-status" class="list-unstyled">
     <li>
-      <span class="label {{ entity.statusString }}">{{ ('estimate.' ~ entity.statusString)|trans }}</span>
+      <span class="label {{ entity.statusString }}">{{ ('order.' ~ entity.statusString)|trans }}</span>
     </li>
     <li>
       {% if entity.sentByEmail %}
-      <span class="label notice">{% trans %}estimate.sent_by_email{% endtrans %}</span>
+      <span class="label notice">{% trans %}order.sent_by_email{% endtrans %}</span>
       {% else %}
-      <span class="label">{% trans %}estimate.not_sent_by_email{% endtrans %}</span>
+      <span class="label">{% trans %}order.not_sent_by_email{% endtrans %}</span>
       {% endif %}
     </li>
   </ul>
@@ -46,6 +46,7 @@
   {{ form_row(form.status) }}
   {% endif %}
   {{ form_row(form.sent_by_email) }}
+  {{ form_row(form.imported) }}
 {% endblock %}
 
 {% block form_actions %}
@@ -66,7 +67,7 @@
 
   <div class="float-right">
     {% if entity.id %}
-    <a class="btn btn-default btn-danger" href="{{ path('estimate_delete', {'id': entity.id}) }}">{% trans %}form.submit_delete{% endtrans %}</a>
+    <a class="btn btn-default btn-danger" href="{{ path('order_delete', {'id': entity.id}) }}">{% trans %}form.submit_delete{% endtrans %}</a>
     {% endif %}
   </div>
 {% endblock %}
@@ -75,11 +76,18 @@
 {% block javascripts %}
   {{ parent() }}
 
-  <script>
-  jQuery(function($) {
-    $(document).on('change', '.edit-item-row select, .edit-item-row input', function () {
-      updateInvoiceTotals('{{ path('estimate_form_totals') }}', $(this).parents('tr'));
-    });
-  });
-  </script>
+	<script type="text/javascript">
+
+ 	 	jQuery(function($) {
+
+    		$(document).on('change', '.edit-item-row select, .edit-item-row input', function () {
+      			updateInvoiceTotals('{{ path('order_form_totals') }}', $(this).parents('tr'));
+    		});
+  		});
+
+ 	 	$(document).ready(function () {
+ 	 		updateInvoiceTotals('{{ path('order_form_totals') }}', $('.edit-item-row select, .edit-item-row input').parents('tr'));
+ 	 	});
+
+  	</script>
 {% endblock %}

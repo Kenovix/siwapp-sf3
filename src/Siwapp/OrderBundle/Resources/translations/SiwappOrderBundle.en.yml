@@ -1,28 +1,27 @@
-estimate:
+order:
     draft: 'Draft'
     pending: 'Pending'
     approved: 'Approved'
     rejected: 'Rejected'
     not_sent_by_email: 'Not sent by e-mail'
     sent_by_email: 'Sent by e-mail'
-    estimate: 'Order'
-    delivery_note: 'Delivery Note'
+    order: 'Estimate'
 
 menu:
-    estimate_index: 'Orders'
-    estimate_add: 'New Order'
-    delivery_note: 'Delivery Note'
+    order_index: 'Estimates'
+    order_add: 'New Estimate'
 
 flash:
     nothing_selected: 'Please select something.'
-    added: 'Order added.'
-    updated: 'Order updated.'
-    deleted: 'Order deleted.'
-    emailed: 'Order sent by e-mail.'
-    bulk_emailed: 'Order(s) sent by e-mail.'
-    bulk_deleted: 'Order(s) deleted.'
-    invoice_generated: 'Invoice generated.'
-    no_js_estimate_print: 'Click here to print your order if it does not happen automatically.'
+    added: 'Estimate added.'
+    updated: 'Estimate updated.'
+    deleted: 'Estimate deleted.'
+    emailed: 'Estimate sent by e-mail.'
+    bulk_emailed: 'Estimate(s) sent by e-mail.'
+    bulk_deleted: 'Estimate(s) deleted.'
+    estimate_generated: 'Order generated.'
+    no_js_order_print: 'Click here to print your estimate if it does not happen automatically.'
+    unregistered_customer: 'The especified customer does not exist. You need registered he first before continue.'
 
 search:
     terms: 'Terms'
@@ -46,13 +45,13 @@ list:
     issue_date: 'Date'
     status: 'Status'
     gross_amount: 'Total'
-    no_results: 'No orders found.'
+    no_results: 'No estimates found.'
 
 show:
     print: 'Print'
     pdf: 'PDF'
     email: 'Send e-mail'
-    generate_invoice: 'Generate invoice'
+    generate_order: 'Generate order'
     issue_date: 'Issue date'
     status: 'Status'
     series: 'Series'
@@ -69,6 +68,6 @@ form:
     submit_pdf: 'Save and download as PDF'
     submit_print: 'Save and print'
     submit_email: 'Save and send by e-mail'
-    submit_generate: 'Save and generate invoice'
+    submit_generate: 'Save and generate order'
     submit_delete: 'Delete'
     tags: 'Tags'

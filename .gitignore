@@ -21,3 +21,4 @@ Siwapp.tags
 .project
 .settings/
 .DS_Store
+.buildpath

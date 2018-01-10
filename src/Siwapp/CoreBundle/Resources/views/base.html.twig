@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{% trans %}html.title{% endtrans %}{% endblock %} | Siwapp</title>
+  <title>{% block title %}{% trans %}html.title{% endtrans %}{% endblock %} | Softcode</title>
   {% block stylesheets %}
   {% stylesheets
     'bundles/siwappcore/vendor/bootstrap/css/bootstrap.min.css'
@@ -38,7 +38,7 @@
     <div class="container">
     <h1>
       <a href="{{ bundle_exists('SiwappDashboardBundle') ? path('dashboard_index') : path('invoice_index') }}">
-        <img src="{{ asset('bundles/siwappcore/img/logo.png') }}" alt="Siwapp" />
+        <img src="{{ asset('uploads/logo.png') }}" alt="Siwapp" />
         <span class="version">v{{ siwapp_version() }}</span>
       </a>
     </h1>
@@ -91,6 +91,11 @@
         <li class="{{ routename|menu_active_tab('estimate_') }}">
           <a href="{{ path('estimate_index') }}">{{ 'menu.estimate_index'|trans({}, 'SiwappEstimateBundle') }}</a>
         </li>
+        {% endif %}
+        {% if bundle_exists('SiwappOrderBundle') %}
+          <li class="{{ routename|menu_active_tab('order_') }}">
+            <a href="{{ path('order_index') }}">{{ 'menu.order_index'|trans({}, 'SiwappOrderBundle') }}</a>
+          </li>
         {% endif %}
         {% if bundle_exists('SiwappCustomerBundle') %}
         <li class="{{ routename|menu_active_tab('customer_') }}">

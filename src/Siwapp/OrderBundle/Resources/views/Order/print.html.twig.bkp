@@ -1,0 +1,197 @@
+{#
+  See https://github.com/siwapp/siwapp-sf3/wiki/Estimate-print-pdf-template
+#}{% trans_default_domain 'SiwappCoreBundle' %}<!doctype html>
+<html lang="{{ app.request.locale }}">
+<head>
+  <meta charset="utf-8" />
+  <title>{% trans from 'SiwappEstimateBundle' %}order.order{% endtrans %}</title>
+  <style type="text/css">
+    /* Custom CSS code */
+    table {border-spacing:0; border-collapse: collapse;}
+    ul {list-style-type: none; padding-left:0;}
+    body, input, textarea { font-family:helvetica,sans-serif; font-size:8pt; }
+    body { color:#464648; margin:2cm 1.5cm; }
+    h2   { color:#535255; font-size:16pt; font-weight:normal; line-height:1.2em; border-bottom:1px solid #DB4823; margin-right:220px }
+    h3   { color:#9A9A9A; font-size:13pt; font-weight:normal; margin-bottom: 0em}
+    table th.right,
+    table td.right              { text-align:right; }
+    .customer-data              { padding:1em 0; }
+    .customer-data table        { width:100%;       }
+    .customer-data table td     { width:50%;        }
+    .customer-data td span      { display:block; margin:0 0 5pt; padding-bottom:2pt; border-bottom:1px solid #DCDCDC; }
+    .customer-data td span.left { margin-right:1em; }
+    .customer-data label        { display:block; font-weight:bold; font-size:8pt; }
+    .payment-data               { padding:1em 0;    }
+    .payment-data table         { width:100%;       }
+    .payment-data th,
+    .payment-data td            { line-height:1em; padding:5pt 8pt 5pt; border:1px solid #DCDCDC; }
+    .payment-data thead th      { background:#FAFAFA; }
+    .payment-data th            { font-weight:bold; white-space:nowrap; }
+    .payment-data .bottomleft   { border-color:white; border-top:inherit; border-right:inherit; }
+    .payment-data span.tax      { display:block; white-space:nowrap; }
+    .terms, .notes              { padding:9pt 0 0; font-size:7pt; line-height:9pt; }
+    .section                    { margin-bottom: 1em; }
+    .logo                       { text-align: right; }
+  </style>
+  <style type="text/css">
+    /* CSS code for printing */
+    @media print {
+      body           { margin:auto; }
+      .section       { page-break-inside:avoid; }
+      .pagebreak     { page-break-before: always; }
+    }
+  </style>
+    {% if print is defined and print %}
+      <script type="text/javascript">
+          window.onload = function() { window.print(); }
+      </script>
+    {% endif %}
+</head>
+<body>
+{% if settings.company_logo is defined and settings.company_logo %}
+  <div class="logo">
+    <img src="{{ absolute_url(asset(settings.company_logo)) }}" alt="{{ settings.company_name }}" />
+  </div>
+{% endif %}
+<div class="h2">
+  <h2>{% trans from 'SiwappEstimateBundle' %}order.order{% endtrans %} #{{order}}</h2>
+</div>
+<div class="section">
+  <div class="company-data">
+    <ul>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_name{% endtrans %}: {{settings.company_name}}</li>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_identification{% endtrans %}: {% if settings.company_identification is defined %}{{settings.company_identification}}{% else %}-{% endif %}</li>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_address{% endtrans %}: {{settings.company_address|nl2br}}</li>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_phone{% endtrans %}: {{settings.company_phone}}</li>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_fax{% endtrans %}: {{settings.company_fax}}</li>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_email{% endtrans %}: {{settings.company_email}}</li>
+      <li>{% trans from 'SiwappConfigBundle' %}show.company_url{% endtrans %}: {{settings.company_url}}</li>
+    </ul>
+  </div>
+</div>
+<div class="section">
+  <h3>{% trans %}abstract_invoice.show.customer{% endtrans %}</h3>
+  <div class="customer-data">
+    <table cellspacing="0" cellpadding="0" width="100%">
+      <tr>
+        <td>
+            <span class="left">
+              <label>{% trans %}abstract_invoice.show.customer_name{% endtrans %}:</label>
+                {{order.customer_name}}
+            </span>
+        </td>
+        <td>
+            <span class="right">
+              <label>{% trans %}abstract_invoice.show.customer_identification{% endtrans %}:</label>
+                {{order.customer_identification}}
+            </span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+            <span class="left">
+              <label>{% trans %}abstract_invoice.show.contact_person{% endtrans %}:</label>
+                {{order.contact_person}}
+            </span>
+        </td>
+        <td>
+            <span class="right">
+              <label>{% trans %}abstract_invoice.show.customer_email{% endtrans %}:</label>
+                {{order.customer_email}}
+            </span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+            <span class="left">
+              <label>{% trans %}abstract_invoice.show.invoicing_address{% endtrans %}:</label>
+                {{order.invoicing_address|nl2br}}
+            </span>
+        </td>
+        <td>
+            <span class="right">
+              <label>{% trans %}abstract_invoice.show.shipping_address{% endtrans %}:</label>
+                {{order.shipping_address|nl2br}}
+            </span>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+<div class="section">
+  <h3>{% trans %}abstract_invoice.show.items{% endtrans %}</h3>
+  <div class="payment-data">
+    <table>
+      <thead>
+      <tr>
+        <th>{% trans %}item.show.description{% endtrans %}</th>
+        <th class="right">{% trans %}item.show.unitary_cost{% endtrans %}</th>
+        <th class="right">{% trans %}item.show.quantity{% endtrans %}</th>
+        <th class="right">{% trans %}item.show.taxes{% endtrans %}</th>
+          {# show discounts only if there is some discount #}
+          {% if order.discount_amount %}
+            <th class="right">{% trans %}item.show.discount{% endtrans %}</th>
+          {% endif %}
+        <th class="right">{% trans %}item.show.total{% endtrans %}</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for item in order.items %}
+        <tr>
+          <td>
+              {{item.description}}
+          </td>
+          <td class="right">{{item.unitary_cost|localizedcurrency(settings.currency, app.request.locale)}}</td>
+          <td class="right">{{item.quantity}}</td>
+          <td class="right">
+              {% for tax in item.taxes %}
+                <span class="tax">{{tax}}</span>
+              {% endfor %}
+          </td>
+            {% if order.discount_amount %}
+              <td class="right">{{item.discount_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+            {% endif %}
+          <td class="right">{{item.gross_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+      <tfoot>
+      <tr>
+        <td class="bottomleft" colspan="{% if order.discount_amount %}4{% else %}3{% endif %}"></td>
+        <th class="right">{% trans %}abstract_invoice.show.subtotal{% endtrans %}</th>
+        <td class="right">{{order.base_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+      </tr>
+      {% if order.discount_amount %}
+        <tr>
+          <td class="bottomleft" colspan="{% if order.discount_amount %}4{% else %}3{% endif %}"></td>
+          <th class="right">{% trans %}abstract_invoice.show.total_discount{% endtrans %}</th>
+          <td class="td_global_discount right">{{order.discount_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+        </tr>
+      {% endif %}
+      <tr>
+        <td class="bottomleft" colspan="{% if order.discount_amount %}4{% else %}3{% endif %}"></td>
+        <th class="right">{% trans %}abstract_invoice.show.total_net{% endtrans %}</th>
+        <td class="td_subtotal right">{{order.net_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+      </tr>
+      <tr>
+        <td class="bottomleft" colspan="{% if order.discount_amount %}4{% else %}3{% endif %}"></td>
+        <th class="right">{% trans %}abstract_invoice.show.total_taxes{% endtrans %}</th>
+        <td class="td_total_taxes right">{{order.tax_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+      </tr>
+      <tr class="strong">
+        <td class="bottomleft" colspan="{% if order.discount_amount %}4{% else %}3{% endif %}"></td>
+        <th class="right">{% trans with {'%currency%': settings.currency} %}abstract_invoice.show.total{% endtrans %}</th>
+        <td class="td_total right">{{order.gross_amount|localizedcurrency(settings.currency, app.request.locale)}}</td>
+      </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+<div class="section">
+  <h3>{% trans %}abstract_invoice.show.terms{% endtrans %}</h3>
+  <div class="terms">
+      {{order.terms|nl2br}}
+  </div>
+</div>
+</body>
+</html>

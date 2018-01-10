@@ -1,0 +1,173 @@
+{#
+  See https://github.com/siwapp/siwapp-sf3/wiki/Invoice-print-pdf-template
+#}{% trans_default_domain 'SiwappCoreBundle' %}<!doctype html>
+<html lang="{{ app.request.locale }}">
+<head>
+  <meta charset="utf-8" />
+  <title>{% trans from 'SiwappEstimateBundle' %}estimate.delivery_note{% endtrans %}</title>
+  <style type="text/css">
+    /* Custom CSS code */
+    table {border-spacing:0; border-collapse: collapse;}
+    ul {list-style-type: none; padding-left:0;}
+    body, input, textarea { font-family:helvetica,sans-serif; font-size:8pt; }
+    body { color:#464648; margin:2cm 1.5cm; }
+    h2   { color:#535255; font-size:16pt; font-weight:normal; line-height:1.2em; border-bottom:1px solid #DB4823; margin-right:220px }
+    h3   { color:#9A9A9A; font-size:13pt; font-weight:normal; margin-bottom: 0em}
+    table th.right,
+    table td.right              { text-align:right; }
+    .customer-data              { padding:1em 0; }
+    .customer-data table        { width:100%;       }
+    .customer-data table td     { width:50%;        }
+    .customer-data td span      { display:block; margin:0 0 5pt; padding-bottom:2pt; border-bottom:1px solid #DCDCDC; }
+    .customer-data td span.left { margin-right:1em; }
+    .customer-data label        { display:block; font-weight:bold; font-size:8pt; }
+    .payment-data               { padding:1em 0;    }
+    .payment-data table         { width:100%;       }
+    .payment-data th,
+    .payment-data td            { line-height:1em; padding:5pt 8pt 5pt; border:1px solid #DCDCDC; }
+    .payment-data thead th      { background:#FAFAFA; }
+    .payment-data th            { font-weight:bold; white-space:nowrap; }
+    .payment-data .bottomleft   { border-color:white; border-top:inherit; border-right:inherit; }
+    .payment-data span.tax      { display:block; white-space:nowrap; }
+    .terms, .notes              { padding:9pt 0 0; font-size:7pt; line-height:9pt; }
+    .section                    { margin-bottom: 1em; }
+    .logo                       { text-align: right; }
+  </style>
+  <style type="text/css">
+    /* CSS code for printing */
+    @media print {
+      body           { margin:auto; }
+      .section       { page-break-inside:avoid; }
+      .pagebreak     { page-break-before: always; }
+    }
+  </style>
+  {% if print is defined and print %}
+  <script type="text/javascript">
+    window.onload = function() { window.print(); }
+  </script>
+  {% endif %}
+</head>
+<body>
+{% set printHeader = true %}
+{% set maxItemsxPage = itemsxPage %}
+{% set currentItemCount = 0 %}
+{% set itemCount = estimate.items|length %}
+
+{% for item in estimate.items %}
+
+{% if printHeader %}
+
+{% if settings.company_logo is defined and settings.company_logo %}
+    <div class="logo">
+      <img src="{{ absolute_url(asset(settings.company_logo)) }}" alt="{{ settings.company_name }}" />
+    </div>
+  {% endif %}
+
+  <div class="h2">
+    <h2>{% trans from 'SiwappEstimateBundle' %}estimate.delivery_note{% endtrans %} #{{estimate}}</h2>
+  </div>
+  <div class="section">
+    <div class="company-data">
+      <ul>
+        <li>{{settings.company_name}}</li>
+        <li>{% if settings.company_identification is defined %}{{settings.company_identification}}{% else %}-{% endif %}</li>
+        <li>{{settings.company_address|nl2br}}</li>
+        <li>{{settings.company_phone}}</li>
+        <li>{{settings.company_fax}}</li>
+        <li>{{settings.company_email}}</li>
+        <li>{{settings.company_url}}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="section">
+    <h3>{% trans %}abstract_invoice.show.customer{% endtrans %}</h3>
+    <div class="customer-data">
+      <table cellspacing="0" cellpadding="0" width="100%">
+        <tr>
+          <td>
+            <span class="left">
+              <label>{% trans %}abstract_invoice.show.customer_name{% endtrans %}:</label>
+              {{estimate.customer_name}}
+            </span>
+          </td>
+          <td>
+            <span class="right">
+              <label>{% trans %}abstract_invoice.show.customer_identification{% endtrans %}:</label>
+              {{estimate.customer_identification}}
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="left">
+              <label>{% trans %}abstract_invoice.show.contact_person{% endtrans %}:</label>
+              {{estimate.contact_person}}
+            </span>
+          </td>
+          <td>
+            <span class="right">
+              <label>{% trans %}abstract_invoice.show.customer_email{% endtrans %}:</label>
+              {{estimate.customer_email}}
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="left">
+              <label>{% trans %}abstract_invoice.show.invoicing_address{% endtrans %}:</label>
+              {{estimate.invoicing_address|nl2br}}
+            </span>
+          </td>
+          <td>
+            <span class="right">
+              <label>{% trans %}abstract_invoice.show.shipping_address{% endtrans %}:</label>
+              {{estimate.shipping_address|nl2br}}
+            </span>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <h3>{% trans %}abstract_invoice.show.items{% endtrans %}</h3>
+    <div class="payment-data">
+      <table>
+        <thead>
+          <tr>
+            <th>{% trans %}item.show.description{% endtrans %}</th>
+            <th class="right">{% trans %}item.show.quantity{% endtrans %}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% endif %}
+            <tr>
+              <td>
+                {{item.description}}
+              </td>
+              <td class="right">{{item.quantity}}</td>
+            </tr>
+        {% if (currentItemCount + 1) % maxItemsxPage == 0 or (currentItemCount + 1) == itemCount %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>{% trans %}abstract_invoice.show.terms{% endtrans %}</h3>
+    <div class="terms">
+      {{estimate.terms|nl2br}}
+    </div>
+  </div>
+        {% endif %}
+
+    {% set currentItemCount = currentItemCount + 1 %}
+    {% set printHeader = false %}
+    {% if currentItemCount % maxItemsxPage == 0 or currentItemCount == itemCount %}<div class="pagebreak"></div>{% endif %}
+
+    {% if currentItemCount % maxItemsxPage == 0 %}
+        {% set printHeader = true %}
+    {% endif %}
+
+{% endfor %}
+</body>
+</html>

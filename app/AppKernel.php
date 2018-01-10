@@ -35,6 +35,7 @@ class AppKernel extends Kernel
             new Siwapp\EstimateBundle\SiwappEstimateBundle(),
             new Siwapp\RecurringInvoiceBundle\SiwappRecurringInvoiceBundle(),
             new Siwapp\UserBundle\SiwappUserBundle(),
+        	new Siwapp\OrderBundle\SiwappOrderBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {

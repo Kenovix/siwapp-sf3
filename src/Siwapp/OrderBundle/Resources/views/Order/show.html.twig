@@ -1,0 +1,63 @@
+{% extends "SiwappCoreBundle:AbstractInvoice:show.html.twig" %}
+{% trans_default_domain 'SiwappOrderBundle' %}
+
+{% block actionlink %}
+<a href="{{ path('order_add') }}" class="btn btn-default btn-primary">
+  <span class="glyphicon glyphicon-plus"></span>
+  {% trans %}menu.order_add{% endtrans %}
+</a>
+{% endblock %}
+
+
+{% block invoice_actions %}
+  <ul class="entity-actions list-inline float-right">
+    <li><a class="btn btn-default btn-info" href="{{ path('order_show_pdf', {'id': entity.id}) }}"><span class="glyphicon glyphicon-download-alt"></span> {% trans %}show.pdf{% endtrans %}</a></li>
+    <li><a class="btn btn-default btn-info" href="{{ path('order_show_print', {'id': entity.id}) }}" target="_blank"><span class="glyphicon glyphicon-print"></span> {% trans %}show.print{% endtrans %}</a></li>
+    <li><form action="{{ path('order_email', {'id': entity.id}) }}" method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+      <button type="submit" class="btn btn-default btn-warning"><span class="glyphicon glyphicon-envelope"></span> {%trans %}show.email{% endtrans %}</button>
+      </form>
+    </li>
+    <li><form action="{{ path('order_generate_estimate', {'id': entity.id}) }}" method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+      <button type="submit" class="btn btn-default btn-warning"><span class="glyphicon glyphicon-file"></span> {% trans %}show.generate_estimate{% endtrans %}</button>
+      </form></li>
+  </ul>
+{% endblock %}
+
+
+{% block invoice_label %}
+  <h2>Estimate {{ entity.label() }}</h2>
+  <ul class="list-inline list-unstyled">
+    <li>
+      <span class="label {{ entity.statusString }}">{{ ('order.' ~ entity.statusString)|trans }}</span>
+    </li>
+    <li>
+      {% if entity.sentByEmail %}
+      <span class="label notice">{% trans %}order.sent_by_email{% endtrans %}</span>
+      {% else %}
+      <span class="label">{% trans %}order.not_sent_by_email{% endtrans %}</span>
+      {% endif %}
+    </li>
+  </ul>
+{% endblock %}
+
+
+{% block properties %}
+  <div class="col-md-12">
+    <label>{% trans %}show.series{% endtrans %}:</label>
+    {{ entity.series }}
+  </div>
+  <div class="col-md-12">
+    <label>{% trans %}show.issue_date{% endtrans %}:</label>
+    {{ entity.issue_date|localizeddate('medium', 'none', app.request.locale) }}
+  </div>
+{% endblock %}
+
+
+{% block invoice_edit_actions %}
+  <ul class="list-inline float-right">
+    <li><a class="btn btn-default" href="{{ path('order_edit', {'id': entity.id}) }}"><span class="glyphicon glyphicon-pencil"></span> {% trans %}show.edit{% endtrans %}</a></li>
+    <li><a class="btn btn-default btn-danger" href="{{ path('order_delete', {'id': entity.id}) }}"><span class="glyphicon glyphicon-trash"></span> {% trans %}show.delete{% endtrans %}</a></li>
+  </ul>
+{% endblock %}
